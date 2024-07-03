@@ -1,0 +1,32 @@
+<template>
+    <lightning-card title="Lead List" icon-name="standard:lead">
+        <div class="slds-p-around_medium">
+            <!-- Existing search and filter inputs -->
+            <lightning-input label="Search" value={searchKey} onchange={handleSearchKeyChange}></lightning-input>
+            <lightning-input label="Lead Source" value={leadSource} onchange={handleLeadSourceChange}></lightning-input>
+            <lightning-combobox label="Records per page" value={pageSize} options={pageSizeOptions} onchange={handlePageSizeChange}></lightning-combobox>
+            <!-- Sync Contacts Button -->
+            <lightning-button label="Sync Contacts" onclick={handleSyncContacts}></lightning-button>
+        </div>
+
+        <!-- Existing datatable and pagination logic -->
+        <template if:true={leads}>
+            <lightning-datatable
+                key-field="id"
+                data={leads}
+                columns={columns}
+                hide-checkbox-column="true">
+            </lightning-datatable>
+
+            <div class="slds-p-around_medium">
+                <lightning-button label="Previous" onclick={handlePreviousPage} disabled={pageNumber}></lightning-button>
+                <lightning-button label="Next" onclick={handleNextPage} disabled={totalPages}></lightning-button>
+                <span>Page {pageNumber} of {totalPages}</span>
+            </div>
+        </template>
+        
+        <template if:true={error}>
+            <c-error-panel errors={error}></c-error-panel>
+        </template>
+    </lightning-card>
+</template>
