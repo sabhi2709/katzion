@@ -13,6 +13,8 @@ export default class LeadSearchFilter extends LightningElement {
         @track pageNumber = 1;
         @track totalRecords;
         @track totalPages;
+        recordsToDisplay;
+        records;
     
         columns = [
             { label: 'First Name', fieldName: 'FirstName' },
@@ -36,8 +38,11 @@ export default class LeadSearchFilter extends LightningElement {
         @wire(getLeadCount, { searchKey: '$searchKey', leadSource: '$leadSource' })
         wiredLeadCount({ error, data }) {
             if (data) {
+                
                 this.totalRecords = data;
+                console.log('wiretotalRecords'+this.totalRecords);
                 this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+                console.log('wiretotalPages'+this.totalPages);
             } else if (error) {
                 this.error = error;
             }
@@ -47,6 +52,8 @@ export default class LeadSearchFilter extends LightningElement {
         wiredLeads({ error, data }) {
             if (data) {
                 this.leads = data;
+                this.records = data;
+                console.log('leads'+JSON.stringify(this.leads))
             } else if (error) {
                 this.error = error;
             }
@@ -54,19 +61,19 @@ export default class LeadSearchFilter extends LightningElement {
     
         handleSearchKeyChange(event) {
             this.searchKey = event.target.value;
-            this.pageNumber = 1; // Reset to first page
+            this.pageNumber = 1; 
             this.fetchLeads();
         }
     
         handleLeadSourceChange(event) {
             this.leadSource = event.target.value;
-            this.pageNumber = 1; // Reset to first page
+            this.pageNumber = 1;
             this.fetchLeads();
         }
     
         handlePageSizeChange(event) {
             this.pageSize = event.target.value;
-            this.pageNumber = 1; // Reset to first page
+            this.pageNumber = 1; 
             this.fetchLeads();
         }
     
@@ -88,7 +95,10 @@ export default class LeadSearchFilter extends LightningElement {
             getLeadCount({ searchKey: this.searchKey, leadSource: this.leadSource })
                 .then(result => {
                     this.totalRecords = result;
+                     console.log('totalRecords'+this.totalRecords);
                     this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+                    console.log('totalPages'+this.totalPages);
+                    this.paginationHelper();
                 })
                 .catch(error => {
                     this.error = error;
@@ -96,7 +106,9 @@ export default class LeadSearchFilter extends LightningElement {
     
             getLeads({ searchKey: this.searchKey, leadSource: this.leadSource, pageSize: this.pageSize, pageNumber: this.pageNumber })
                 .then(result => {
-                    this.leads = result;
+                    console.log('getrecords'+JSON.stringify(result));
+                    this.records = result;
+                    //this.leads = result;
                 })
                 .catch(error => {
                     this.error = error;
@@ -106,23 +118,45 @@ export default class LeadSearchFilter extends LightningElement {
         handleSyncContacts() {
             syncContacts()
                 .then(() => {
-                    this.dispatchEvent(
-                        new ShowToastEvent({
-                            title: 'Success',
-                            message: 'Contacts synchronized successfully!',
-                            variant: 'success'
-                        })
-                    );
+                    this.showToastMessage('Success','Contacts synchronized successfully!','success');
                 })
                 .catch(error => {
                     this.error = error;
-                    this.dispatchEvent(
-                        new ShowToastEvent({
-                            title: 'Error',
-                            message: 'Failed to synchronize contacts: ' + error.body.message,
-                            variant: 'error'
-                        })
-                    );
+                    this.showToastMessage('Error','Failed to synchronize contacts: '+error.body.message,'error');
                 });
         }
+    get isFirstPage() {
+        return this.pageNumber === 1;
     }
+
+    get isLastPage() {
+        return this.pageNumber >= Math.ceil(this.totalLeads / this.pageSize);
+    }
+
+     paginationHelper() {
+        this.recordsToDisplay = [];
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+        
+        if (this.pageNumber <= 1) {
+            this.pageNumber = 1;
+        } 
+        else if (this.pageNumber >= this.totalPages) {
+            this.pageNumber = this.totalPages;
+        }
+        for (let i = (this.pageNumber - 1) * this.pageSize; i < this.pageNumber * this.pageSize; i++) {
+            if (i === this.totalRecords) {
+                break;
+            }
+            this.recordsToDisplay.push(this.records[i]);
+        }
+    }
+
+    showToastMessage(title,message,variant){
+        const evt = new ShowToastEvent({
+            title : toastTitle,
+            message : toastMessage,
+            variant :toastVariant,
+        });
+        this.dispatchEvent(evt);
+    }
+}
