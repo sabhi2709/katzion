@@ -117,12 +117,18 @@ export default class LeadSearchFilter extends LightningElement {
     
         handleSyncContacts() {
             syncContacts()
-                .then(() => {
-                    this.showToastMessage('Success','Contacts synchronized successfully!','success');
+                .then((result) => {
+                    if(result == 'Success'){
+                            this.showToastMessage('Success','Contacts synchronized successfully!','success');
+                    }
+                    else {
+                        this.showToastMessage('Error','Failed to synchronize ','error');
+                    }
+                   
                 })
                 .catch(error => {
                     this.error = error;
-                    this.showToastMessage('Error','Failed to synchronize contacts: '+error.body.message,'error');
+                    this.showToastMessage('Error','Failed to synchronize contacts: ','error');
                 });
         }
     get isFirstPage() {
@@ -151,7 +157,7 @@ export default class LeadSearchFilter extends LightningElement {
         }
     }
 
-    showToastMessage(title,message,variant){
+    showToastMessage(toastTitle,toastMessage,toastVariant){
         const evt = new ShowToastEvent({
             title : toastTitle,
             message : toastMessage,
